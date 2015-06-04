@@ -141,9 +141,12 @@ namespace Microsoft.Azure.WebJobs.Host.Executors
                     functionOutputLogger = (IFunctionOutputLogger)(await((IFunctionOutputLoggerProvider)loggerProvider).GetAsync(combinedCancellationToken));
                 }
 
+                IStorageAccount storageAccount = await storageAccountProvider.GetStorageAccountAsync(cancellationToken);
+                SingletonManager singletonManager = new SingletonManager(storageAccount.CreateBlobClient());
+
                 if (functionExecutor == null)
                 {
-                    functionExecutor = new FunctionExecutor(functionInstanceLogger, functionOutputLogger, backgroundExceptionDispatcher);
+                    functionExecutor = new FunctionExecutor(functionInstanceLogger, functionOutputLogger, backgroundExceptionDispatcher, singletonManager);
                 }
 
                 if (functionIndexProvider == null)
@@ -152,7 +155,7 @@ namespace Microsoft.Azure.WebJobs.Host.Executors
                 }
 
                 IFunctionIndex functions = await functionIndexProvider.GetAsync(combinedCancellationToken);
-                IListenerFactory functionsListenerFactory = new HostListenerFactory(functions.ReadAll());
+                IListenerFactory functionsListenerFactory = new HostListenerFactory(singletonManager, functions.ReadAll());
 
                 TextWriter consoleOut = consoleProvider.Out;
                 IFunctionExecutor hostCallExecutor;

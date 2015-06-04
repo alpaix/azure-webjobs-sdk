@@ -3,6 +3,7 @@
 
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Blobs;
 using Microsoft.Azure.WebJobs.Host.Executors;
@@ -46,7 +47,12 @@ namespace Microsoft.Azure.WebJobs.Host.UnitTests
             var task = outputLoggerProvider.GetAsync(CancellationToken.None);
             task.Wait();
             IFunctionOutputLogger outputLogger = task.Result;
-            IFunctionExecutor executor = new FunctionExecutor(new NullFunctionInstanceLogger(), outputLogger, BackgroundExceptionDispatcher.Instance);
+
+            Task<IStorageAccount> storageAccountTask = storageAccountProvider.GetStorageAccountAsync(CancellationToken.None);
+            storageAccountTask.Wait();
+            SingletonManager singletonManager = new SingletonManager(storageAccountTask.Result.CreateBlobClient());
+
+            IFunctionExecutor executor = new FunctionExecutor(new NullFunctionInstanceLogger(), outputLogger, BackgroundExceptionDispatcher.Instance, singletonManager);
 
             if (extensionRegistry == null)
             {

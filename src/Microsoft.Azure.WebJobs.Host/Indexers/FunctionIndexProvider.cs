@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs.Host.Bindings;
 using Microsoft.Azure.WebJobs.Host.Executors;
-using Microsoft.Azure.WebJobs.Host.Storage;
 using Microsoft.Azure.WebJobs.Host.Triggers;
 
 namespace Microsoft.Azure.WebJobs.Host.Indexers
@@ -23,7 +22,8 @@ namespace Microsoft.Azure.WebJobs.Host.Indexers
 
         private IFunctionIndex _index;
 
-        public FunctionIndexProvider(ITypeLocator typeLocator,
+        public FunctionIndexProvider(
+            ITypeLocator typeLocator,
             ITriggerBindingProvider triggerBindingProvider,
             IBindingProvider bindingProvider,
             IJobActivator activator,

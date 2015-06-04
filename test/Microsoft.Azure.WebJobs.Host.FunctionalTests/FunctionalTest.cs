@@ -237,7 +237,12 @@ namespace Microsoft.Azure.WebJobs.Host.FunctionalTests
             Task<IFunctionOutputLogger> task = functionOutputLoggerProvider.GetAsync(CancellationToken.None);
             task.Wait();
             IFunctionOutputLogger functionOutputLogger = task.Result;
-            FunctionExecutor executor = new FunctionExecutor(functionInstanceLogger, functionOutputLogger, backgroundExceptionDispatcher);
+
+            Task<IStorageAccount> storageAccountTask = storageAccountProvider.GetStorageAccountAsync(CancellationToken.None);
+            storageAccountTask.Wait();
+            SingletonManager singletonManager = new SingletonManager(storageAccountTask.Result.CreateBlobClient());
+
+            FunctionExecutor executor = new FunctionExecutor(functionInstanceLogger, functionOutputLogger, backgroundExceptionDispatcher, singletonManager);
 
             ITypeLocator typeLocator = new FakeTypeLocator(programType);
             FunctionIndexProvider functionIndexProvider = new FunctionIndexProvider(

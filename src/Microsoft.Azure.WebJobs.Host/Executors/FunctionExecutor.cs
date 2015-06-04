@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
+using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -22,11 +23,12 @@ namespace Microsoft.Azure.WebJobs.Host.Executors
         private readonly IFunctionInstanceLogger _functionInstanceLogger;
         private readonly IFunctionOutputLogger _functionOutputLogger;
         private readonly IBackgroundExceptionDispatcher _backgroundExceptionDispatcher;
+        private readonly SingletonManager _singletonManager;
 
         private HostOutputMessage _hostOutputMessage;
 
         public FunctionExecutor(IFunctionInstanceLogger functionInstanceLogger, IFunctionOutputLogger functionOutputLogger, 
-            IBackgroundExceptionDispatcher backgroundExceptionDispatcher)
+            IBackgroundExceptionDispatcher backgroundExceptionDispatcher, SingletonManager singletonManager)
         {
             if (functionInstanceLogger == null)
             {
@@ -46,6 +48,7 @@ namespace Microsoft.Azure.WebJobs.Host.Executors
             _functionInstanceLogger = functionInstanceLogger;
             _functionOutputLogger = functionOutputLogger;
             _backgroundExceptionDispatcher = backgroundExceptionDispatcher;
+            _singletonManager = singletonManager;
         }
 
         public HostOutputMessage HostOutputMessage
@@ -56,6 +59,18 @@ namespace Microsoft.Azure.WebJobs.Host.Executors
 
         public async Task<IDelayedException> TryExecuteAsync(IFunctionInstance instance, CancellationToken cancellationToken)
         {
+            MethodInfo method = instance.FunctionDescriptor.Method;
+
+            // TODO: Figure out where this goes
+            SingletonAttribute singletonAttribute = method.GetCustomAttribute<SingletonAttribute>();
+            TimeSpan lockAcquisitionTimeout = TimeSpan.FromSeconds(30);
+            object lockHandle = null;
+            if (singletonAttribute != null && singletonAttribute.Mode == SingletonMode.Function)
+            {
+                string lockId = SingletonManager.FormatLockId(method, singletonAttribute.Scope);
+                lockHandle = await _singletonManager.LockAsync(lockId, cancellationToken, aquisitionTimeout: lockAcquisitionTimeout);
+            }
+
             FunctionStartedMessage startedMessage = CreateStartedMessageWithoutArguments(instance);
             IDictionary<string, ParameterLog> parameterLogCollector = new Dictionary<string, ParameterLog>();
             FunctionCompletedMessage completedMessage = null;
@@ -83,6 +98,11 @@ namespace Microsoft.Azure.WebJobs.Host.Executors
                 };
 
                 exceptionInfo = ExceptionDispatchInfo.Capture(exception);
+            }
+
+            if (lockHandle != null)
+            {
+                await _singletonManager.ReleaseLockAsync(lockHandle, cancellationToken);
             }
 
             completedMessage.ParameterLogs = parameterLogCollector;
@@ -135,8 +155,7 @@ namespace Microsoft.Azure.WebJobs.Host.Executors
 
                 using (ValueProviderDisposable.Create(parameters))
                 {
-                    startedMessageId = await LogFunctionStartedAsync(message, outputDefinition, parameters,
-                        cancellationToken);
+                    startedMessageId = await LogFunctionStartedAsync(message, outputDefinition, parameters, cancellationToken);
 
                     try
                     {

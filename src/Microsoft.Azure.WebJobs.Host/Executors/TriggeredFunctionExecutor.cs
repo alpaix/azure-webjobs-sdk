@@ -33,6 +33,7 @@ namespace Microsoft.Azure.WebJobs.Host.Executors
         public async Task<bool> TryExecuteAsync(TriggeredFunctionData<TTriggerValue> input, CancellationToken cancellationToken)
         {
             IFunctionInstance instance = _instanceFactory.Create(input.TriggerValue, input.ParentId);
+
             IDelayedException exception = await _executor.TryExecuteAsync(instance, cancellationToken);
 
             return exception == null;

@@ -58,6 +58,7 @@
     <Compile Include="HostStopTests.cs" />
     <Compile Include="InstanceTests.cs" />
     <Compile Include="ScenarioTests.cs" />
+    <Compile Include="SingletonManagerTests.cs" />
     <Compile Include="StoragePageBlobExtensions.cs" />
     <Compile Include="StorageBlockBlobExtensions.cs" />
     <Compile Include="StorageTableExtensions.cs" />

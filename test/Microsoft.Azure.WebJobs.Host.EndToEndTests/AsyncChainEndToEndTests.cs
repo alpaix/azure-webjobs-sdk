@@ -68,6 +68,8 @@ namespace Microsoft.Azure.WebJobs.Host.EndToEndTests
         {
             byte[] messageBytes = Encoding.UTF8.GetBytes(message);
 
+            await Task.Delay(20 * 1000);
+
             await blobStream.WriteAsync(messageBytes, 0, messageBytes.Length);
         }
 
