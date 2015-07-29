@@ -46,6 +46,10 @@
     <AssemblyOriginatorKeyFile>..\Common\PublicKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Azure.WebJobs, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\..\..\nebula\packages\Microsoft.Azure.WebJobs.Core.1.1.0-alpha1\lib\net45\Microsoft.Azure.WebJobs.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.Data.Edm, Version=5.6.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.Data.Edm.5.6.0\lib\net40\Microsoft.Data.Edm.dll</HintPath>
     </Reference>
@@ -668,6 +672,7 @@
     <Compile Include="Timers\RandomExtensions.cs" />
     <Compile Include="Timers\RecurrentTaskSeriesCommand.cs" />
     <Compile Include="Timers\TaskSeriesCommandResult.cs" />
+    <Compile Include="TriggerHostConfiguration.cs" />
     <Compile Include="Triggers\ITriggerDataArgumentBinding.cs" />
     <Compile Include="Triggers\TriggeredFunctionInstanceFactory.cs" />
     <Compile Include="Executors\HostMessageExecutor.cs" />
@@ -879,12 +884,6 @@
     <Compile Include="Blobs\Listeners\BlobLogListener.cs" />
     <Compile Include="Blobs\Listeners\StorageBlobClientComparer.cs" />
     <Compile Include="WebSitesKnownKeyNames.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Microsoft.Azure.WebJobs\WebJobs.csproj">
-      <Project>{e3f2b2c8-6b8d-4d6a-a3ae-98366c9f3b49}</Project>
-      <Name>WebJobs</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Common\PublicKey.snk">
